@@ -1,0 +1,207 @@
+// Prisma Schema for P1 - 智能异常监控平台
+// Database: PostgreSQL
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============ 用户与权限 ============
+
+model User {
+  id           String   @id @default(uuid())
+  username     String   @unique @db.VarChar(50)
+  passwordHash String   @map("password_hash") @db.VarChar(255)
+  email        String?  @db.VarChar(100)
+  role         String   @default("viewer") @db.VarChar(20) // admin / operator / viewer
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  conversations Conversation[]
+
+  @@map("users")
+}
+
+// ============ 设备与指标 ============
+
+model Server {
+  id        String   @id @db.VarChar(50) // srv-001, srv-002...
+  name      String   @db.VarChar(100)
+  roomId    String   @map("room_id") @db.VarChar(50) // 机房 ID: room-A, room-B...
+  type      String   @db.VarChar(50) // server / switch / router / storage
+  ip        String?  @db.VarChar(50)
+  specs     Json?    // { cpu: "Intel Xeon", memory: "128GB", disk: "4TB" }
+  status    String   @default("online") @db.VarChar(20) // online / offline / maintenance
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  metrics   Metric[]
+  anomalies Anomaly[]
+
+  @@index([roomId])
+  @@index([status])
+  @@map("servers")
+}
+
+model Metric {
+  id         BigInt   @id @default(autoincrement())
+  serverId   String   @map("server_id") @db.VarChar(50)
+  metricType String   @map("metric_type") @db.VarChar(50) // cpu / memory / temperature / disk_io / network
+  value      Float    @db.DoublePrecision
+  unit       String?  @db.VarChar(20) // % / °C / MB/s
+  timestamp  DateTime @default(now()) @db.Timestamptz(3)
+
+  server Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  @@index([serverId, metricType, timestamp(sort: Desc)])
+  @@index([timestamp(sort: Desc)])
+  @@map("metrics")
+}
+
+// ============ 异常与诊断 ============
+
+model Anomaly {
+  id         String   @id @default(uuid())
+  serverId   String   @map("server_id") @db.VarChar(50)
+  type       String   @db.VarChar(100) // cpu_spike / memory_leak / temperature_high / disk_full / network_spike
+  severity   String   @db.VarChar(20) // low / medium / high / critical
+  detectedAt DateTime @default(now()) @map("detected_at") @db.Timestamptz(3)
+  resolvedAt DateTime? @map("resolved_at") @db.Timestamptz(3)
+  status     String   @default("open") @db.VarChar(20) // open / diagnosing / resolved / ignored
+  rawData    Json     @map("raw_data") // 触发异常时的原始指标数据
+  metadata   Json?    // 检测算法信息、阈值等
+
+  server    Server     @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  diagnosis Diagnosis?
+
+  @@index([serverId, status])
+  @@index([status, detectedAt(sort: Desc)])
+  @@index([severity, detectedAt(sort: Desc)])
+  @@map("anomalies")
+}
+
+model Diagnosis {
+  id         String   @id @default(uuid())
+  anomalyId  String   @unique @map("anomaly_id")
+  steps      Json     // Agent 的每一步思考与工具调用 [{ step: 1, action: "tool-call", tool: "getServerHealth", ... }]
+  conclusion String   @db.Text // Agent 的最终诊断结论（Markdown 格式）
+  action     String   @db.VarChar(50) // notify / create_ticket / ignore / auto_fix
+  durationMs Int      @map("duration_ms") // 诊断耗时（毫秒）
+  model      String   @default("deepseek-chat") @db.VarChar(50)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  anomaly   Anomaly    @relation(fields: [anomalyId], references: [id], onDelete: Cascade)
+  toolCalls ToolCall[]
+
+  @@index([createdAt(sort: Desc)])
+  @@map("diagnoses")
+}
+
+model ToolCall {
+  id          String   @id @default(uuid())
+  diagnosisId String?  @map("diagnosis_id") // Agent 自主诊断触发
+  messageId   String?  @map("message_id") // 用户聊天触发
+  toolName    String   @map("tool_name") @db.VarChar(100)
+  args        Json     // 工具参数
+  result      Json?    // 工具返回结果
+  durationMs  Int?     @map("duration_ms")
+  status      String   @db.VarChar(20) // success / error
+  errorMsg    String?  @map("error_msg") @db.Text
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  diagnosis Diagnosis? @relation(fields: [diagnosisId], references: [id], onDelete: Cascade)
+  message   Message?   @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([toolName])
+  @@index([diagnosisId])
+  @@index([messageId])
+  @@index([createdAt(sort: Desc)])
+  @@map("tool_calls")
+}
+
+// ============ 用户聊天 ============
+
+model Conversation {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  title     String   @default("新对话") @db.VarChar(200)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@index([userId, updatedAt(sort: Desc)])
+  @@map("conversations")
+}
+
+model Message {
+  id             String   @id @default(uuid())
+  conversationId String   @map("conversation_id")
+  role           String   @db.VarChar(20) // user / assistant / tool
+  content        String   @db.Text
+  toolCalls      Json?    @map("tool_calls") // 本条消息触发的工具调用
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  toolCallRecords ToolCall[]
+
+  @@index([conversationId, createdAt])
+  @@map("messages")
+}
+
+// ============ 工单（可选，简化版）============
+
+model Ticket {
+  id          String   @id @default(uuid())
+  anomalyId   String?  @map("anomaly_id") // 关联的异常 ID
+  serverId    String   @map("server_id") @db.VarChar(50)
+  title       String   @db.VarChar(200)
+  description String   @db.Text
+  priority    String   @db.VarChar(20) // low / medium / high / urgent
+  status      String   @default("open") @db.VarChar(20) // open / in_progress / resolved / closed
+  assignee    String?  @db.VarChar(100) // 分配给谁
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  resolvedAt  DateTime? @map("resolved_at") @db.Timestamptz(3)
+
+  @@index([status, priority])
+  @@index([serverId])
+  @@map("tickets")
+}
+
+// ============ 配置（可选）============
+
+model Config {
+  id        String   @id @default(uuid())
+  key       String   @unique @db.VarChar(100) // 配置键，如 "cpu_threshold"
+  value     Json     // 配置值，支持复杂结构
+  category  String   @db.VarChar(50) // detection / notification / agent
+  updatedBy String?  @map("updated_by") @db.VarChar(50)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([category])
+  @@map("configs")
+}
+
+// ============ 索引说明 ============
+
+// Metric 表索引策略：
+// 1. (serverId, metricType, timestamp DESC): 查询某设备某指标的历史数据
+// 2. (timestamp DESC): 定期清理旧数据
+
+// Anomaly 表索引策略：
+// 1. (serverId, status): 查询某设备的未解决异常
+// 2. (status, detectedAt DESC): 异常列表按时间倒序
+// 3. (severity, detectedAt DESC): 按严重度查询
+
+// Diagnosis 表索引策略：
+// 1. (createdAt DESC): 诊断记录列表
+
+// ToolCall 表索引策略：
+// 1. (toolName): 工具调用统计
+// 2. (diagnosisId): 查询某次诊断的所有工具调用
+// 3. (createdAt DESC): 工具调用时序分析

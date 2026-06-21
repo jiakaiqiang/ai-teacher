@@ -1,0 +1,21 @@
+{
+  "currentDay": 1,
+  "startDate": "2026-06-17",
+  "lastReminderDate": null,
+  "lastCheckDate": null,
+  "dailyProgress": [],
+  "stats": {
+    "totalDays": 0,
+    "completedDays": 0,
+    "averageScore": 0,
+    "consecutiveDays": 0
+  },
+  "userInfo": {
+    "name": "贾开强",
+    "githubUsername": "jiakaiqiang",
+    "projectRepo": "lighthouse-ai-analyzer",
+    "targetSalary": "35-50万",
+    "currentStatus": "在职",
+    "weeklyAvailableHours": 20
+  }
+}
