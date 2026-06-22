@@ -127,6 +127,7 @@ docker exec -it p1-postgres psql -U postgres -d monitor
 你会得到类似这样的连接字符串：
 ```
 postgresql://postgres.xxxxx:your-password@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres
+DATABASE_URL="postgresql://postgres.niogmzqxdznxdveazaxz:[YOUR-PASSWORD]@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
 ```
 
 #### 更新 .env
