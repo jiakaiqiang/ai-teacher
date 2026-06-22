@@ -56,7 +56,61 @@ Prisma 的价值：
 
 ### 任务 1：数据库准备（15 分钟）
 
-#### 方案 A：使用 Supabase（推荐，免费）
+#### 方案 A：本地 Docker 运行 PostgreSQL（推荐）
+
+**前置条件**：
+- 已安装 Docker Desktop
+- Docker 服务已启动
+
+**启动 PostgreSQL 容器**：
+
+```bash
+# 1. 启动 PostgreSQL 16 容器
+docker run --name p1-postgres \
+  -e POSTGRES_PASSWORD=123456 \
+  -e POSTGRES_DB=monitor \
+  -p 5432:5432 \
+  -d postgres:16
+
+# 2. 验证容器运行
+docker ps | grep p1-postgres
+
+# 应该看到：
+# CONTAINER ID   IMAGE         ... STATUS         PORTS
+# xxxxx          postgres:16   ... Up 5 seconds   0.0.0.0:5432->5432/tcp
+
+# 3. 测试连接（可选）
+docker exec -it p1-postgres psql -U postgres -d monitor -c "SELECT version();"
+
+# 应该看到 PostgreSQL 版本信息
+```
+
+**连接字符串**：
+```
+postgresql://postgres:123456@localhost:5432/monitor
+```
+
+**常用 Docker 命令**：
+```bash
+# 停止容器
+docker stop p1-postgres
+
+# 启动容器（容器已存在时）
+docker start p1-postgres
+
+# 删除容器（需要先停止）
+docker rm p1-postgres
+
+# 查看日志
+docker logs p1-postgres
+
+# 进入 psql 命令行
+docker exec -it p1-postgres psql -U postgres -d monitor
+```
+
+#### 方案 B：使用 Supabase（云端，免费）
+
+如果本地 Docker 无法使用，可以选择云端数据库：
 
 ```bash
 # 1. 访问 https://supabase.com
@@ -73,19 +127,6 @@ Prisma 的价值：
 你会得到类似这样的连接字符串：
 ```
 postgresql://postgres.xxxxx:your-password@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres
-```
-
-#### 方案 B：本地 Docker 运行 Postgres
-
-```bash
-docker run --name p1-postgres \
-  -e POSTGRES_PASSWORD=123456 \
-  -e POSTGRES_DB=monitor \
-  -p 5432:5432 \
-  -d postgres:16
-
-# 连接字符串：
-# postgresql://postgres:123456@localhost:5432/monitor
 ```
 
 #### 更新 .env
