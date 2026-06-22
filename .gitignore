@@ -31,3 +31,24 @@ coverage/
 # Temporary files
 *.tmp
 .cache/
+
+# Project specific
+p1-monitor/backend/node_modules/
+p1-monitor/backend/dist/
+p1-monitor/backend/.env
+p2-rag/backend/node_modules/
+p2-rag/backend/dist/
+p2-rag/backend/.env
+p3-multi-agent/backend/node_modules/
+p3-multi-agent/backend/dist/
+p3-multi-agent/backend/.env
+p4-3d-platform/backend/node_modules/
+p4-3d-platform/backend/dist/
+p4-3d-platform/backend/.env
+
+# Prisma
+**/prisma/migrations/
+**/.prisma/
+
+# Docker
+docker-compose.override.yml
