@@ -1,13 +1,150 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+// ============ 用户 ============
+model User {
+  id           String   @id @default(uuid())
+  username     String   @unique @db.VarChar(50)
+  passwordHash String   @map("password_hash") @db.VarChar(255)
+  email        String?  @db.VarChar(100)
+  role         String   @default("viewer") @db.VarChar(20)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  conversations Conversation[]
+
+  @@map("users")
+}
+
+// ============ 聊天 ============
+model Conversation {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  title     String   @default("新对话") @db.VarChar(200)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages Message[]
+
+  @@index([userId, updatedAt(sort: Desc)])
+  @@map("conversations")
+}
+
+// ============ 消息 ============
+model Message {
+  id             String   @id @default(uuid())
+  conversationId String   @map("conversation_id")
+  role           String   @db.VarChar(20)
+  content        String   @db.Text
+  toolCalls      Json?    @map("tool_calls")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  conversation    Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  toolCallRecords ToolCall[]
+
+  @@index([conversationId, createdAt])
+  @@map("messages")
+}
+
+// ============ 设备 ============
+model Server {
+  id        String   @id @db.VarChar(50)
+  name      String   @db.VarChar(100)
+  roomId    String   @map("room_id") @db.VarChar(50)
+  type      String   @db.VarChar(50)
+  ip        String?  @db.VarChar(50)
+  specs     Json?
+  status    String   @default("online") @db.VarChar(20)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  metrics   Metric[]
+  anomalies Anomaly[]
+
+  @@index([roomId])
+  @@index([status])
+  @@map("servers")
+}
+
+// ============ 指标 ============
+model Metric {
+  id         BigInt   @id @default(autoincrement())
+  serverId   String   @map("server_id") @db.VarChar(50)
+  metricType String   @map("metric_type") @db.VarChar(50)
+  value      Float    @db.DoublePrecision
+  unit       String?  @db.VarChar(20)
+  timestamp  DateTime @default(now()) @db.Timestamptz(3)
+
+  server Server @relation(fields: [serverId], references: [id], onDelete: Cascade)
+
+  @@index([serverId, metricType, timestamp(sort: Desc)])
+  @@map("metrics")
+}
+
+// ============ 异常 ============
+model Anomaly {
+  id         String    @id @default(uuid())
+  serverId   String    @map("server_id") @db.VarChar(50)
+  type       String    @db.VarChar(100)
+  severity   String    @db.VarChar(20)
+  detectedAt DateTime  @default(now()) @map("detected_at") @db.Timestamptz(3)
+  resolvedAt DateTime? @map("resolved_at") @db.Timestamptz(3)
+  status     String    @default("open") @db.VarChar(20)
+  rawData    Json      @map("raw_data")
+  metadata   Json?
+
+  server    Server     @relation(fields: [serverId], references: [id], onDelete: Cascade)
+  diagnosis Diagnosis?
+
+  @@index([serverId, status])
+  @@index([status, detectedAt(sort: Desc)])
+  @@map("anomalies")
+}
+
+// ============ 诊断 ============
+model Diagnosis {
+  id         String   @id @default(uuid())
+  anomalyId  String   @unique @map("anomaly_id")
+  steps      Json
+  conclusion String   @db.Text
+  action     String   @db.VarChar(50)
+  durationMs Int      @map("duration_ms")
+  model      String   @default("deepseek-chat") @db.VarChar(50)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  anomaly   Anomaly    @relation(fields: [anomalyId], references: [id], onDelete: Cascade)
+  toolCalls ToolCall[]
+
+  @@map("diagnoses")
+}
+
+// ============ 工具调用 ============
+model ToolCall {
+  id          String   @id @default(uuid())
+  diagnosisId String?  @map("diagnosis_id")
+  messageId   String?  @map("message_id")
+  toolName    String   @map("tool_name") @db.VarChar(100)
+  args        Json
+  result      Json?
+  durationMs  Int?     @map("duration_ms")
+  status      String   @db.VarChar(20)
+  errorMsg    String?  @map("error_msg") @db.Text
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  diagnosis Diagnosis? @relation(fields: [diagnosisId], references: [id], onDelete: Cascade)
+  message   Message?   @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([toolName])
+  @@index([diagnosisId])
+  @@map("tool_calls")
 }

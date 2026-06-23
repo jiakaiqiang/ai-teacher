@@ -1,0 +1,16 @@
+// ============ 诊断 ============
+model Diagnosis {
+  id         String   @id @default(uuid())
+  anomalyId  String   @unique @map("anomaly_id")
+  steps      Json
+  conclusion String   @db.Text
+  action     String   @db.VarChar(50)
+  durationMs Int      @map("duration_ms")
+  model      String   @default("deepseek-chat") @db.VarChar(50)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  anomaly   Anomaly    @relation(fields: [anomalyId], references: [id], onDelete: Cascade)
+  toolCalls ToolCall[]
+
+  @@map("diagnoses")
+}
