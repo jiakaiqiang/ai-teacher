@@ -72,7 +72,7 @@ app.setGlobalPrefix('api');
 /api/health
 ```
 
-### 3. 构建和启动时还存在 Prisma client 路径问题
+### 3. 构建和启动时还存在 Prisma 7 client 配置问题
 
 项目使用 Prisma 7，Prisma client 原来生成到：
 
@@ -80,9 +80,13 @@ app.setGlobalPrefix('api');
 generated/prisma
 ```
 
-这个目录在 `src` 外面。Nest 编译到 `dist` 后，运行时会找不到 Prisma client 或 Prisma runtime 文件。
+这个目录在 `src` 外面。Nest 编译到 `dist` 后，运行时会找不到生成出来的 Prisma client。
 
-因此需要把 Prisma client 生成到 `src` 内部，并配置 Nest 构建时复制 Prisma runtime。
+同时，Prisma 7 的写法已经不再推荐 `prisma-client-js` 和 `@prisma/client` 默认导入：
+
+- generator 应该使用 `provider = "prisma-client"`，并显式配置 `output`。
+- `datasource.url` 应该放到 `prisma.config.ts`，不要继续写在 `schema.prisma` 里。
+- PostgreSQL 运行时需要使用 driver adapter，例如 `@prisma/adapter-pg`。
 
 ## 修改方案
 
@@ -219,14 +223,55 @@ prisma/schema.prisma
 
 ```prisma
 generator client {
-  provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
 }
 ```
 
-作用：让 Prisma client 生成到 `src` 内部，方便 Nest 编译和路径解析。
+作用：使用 Prisma 7 的新 generator，并让 Prisma client 生成到 `src` 内部，方便 Nest 编译和路径解析。
 
-### 6. 修改 PrismaService 的 PrismaClient 引入路径
+注意：Prisma 7 的 `schema.prisma` 里不再写：
+
+```prisma
+url = env("DATABASE_URL")
+```
+
+数据库连接地址放到根目录的 `prisma.config.ts`。
+
+### 6. 新增或更新 `prisma.config.ts`
+
+修改文件：
+
+```text
+prisma.config.ts
+```
+
+内容：
+
+```ts
+import "dotenv/config";
+import { defineConfig, env } from "prisma/config";
+
+export default defineConfig({
+  schema: "prisma/schema.prisma",
+  migrations: {
+    path: "prisma/migrations",
+    seed: "tsx prisma/seed.ts",
+  },
+  datasource: {
+    url: env("DATABASE_URL"),
+  },
+});
+```
+
+作用：Prisma CLI 从这里读取 schema、migration、seed 和数据库连接地址。
+
+### 7. 修改 PrismaService 的 PrismaClient 引入和初始化方式
 
 修改文件：
 
@@ -234,39 +279,71 @@ generator client {
 src/prisma/prisma.service.ts
 ```
 
-将原来的引入方式改成：
+将原来的 `@prisma/client` 默认导入改成生成目录导入，并传入 PostgreSQL adapter：
 
 ```ts
-import { PrismaClient } from '../generated/prisma';
+import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '../generated/prisma/client';
+
+@Injectable()
+export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
+  constructor() {
+    const adapter = new PrismaPg({
+      connectionString: process.env.DATABASE_URL!,
+    });
+
+    super({ adapter });
+  }
+
+  async onModuleInit() {
+    await this.$connect();
+    console.log('Prisma connected');
+  }
+
+  async onModuleDestroy() {
+    await this.$disconnect();
+  }
+}
 ```
 
-作用：使用新的 Prisma client 生成位置。
+作用：使用 Prisma 7 生成的新 client，并让运行时通过 `@prisma/adapter-pg` 连接 PostgreSQL。
 
-### 7. 配置 Nest 构建时复制 Prisma runtime
+### 8. 安装 Prisma 7 运行依赖
 
-修改文件：
+执行：
+
+```bash
+pnpm add @prisma/client@7 @prisma/adapter-pg pg dotenv
+pnpm add -D prisma@7 tsx
+```
+
+作用：安装 Prisma 7 client、PostgreSQL driver adapter、`pg` 驱动和 seed 运行器。
+
+### 9. 移除旧的 runtime 复制和额外 runtime 依赖
+
+下面这些旧处理不再作为 Prisma 7 推荐写法：
 
 ```text
-nest-cli.json
+provider = "prisma-client-js"
+import { PrismaClient } from '@prisma/client'
+pnpm add @prisma/client-runtime-utils@7.8.0
 ```
 
-新增：
+使用 `provider = "prisma-client"` 并把输出目录放到 `src/generated/prisma` 后，Nest 会把被引用的生成代码一起编译。通常不需要再通过 `nest-cli.json` 复制 `generated/prisma/**/*`，也不需要手动添加 `@prisma/client-runtime-utils`。
+
+如果项目仍保留了下面这段 assets 配置，可以删除：
 
 ```json
 {
   "compilerOptions": {
-    "deleteOutDir": true,
     "assets": ["generated/prisma/**/*"],
     "watchAssets": true
   }
 }
 ```
 
-作用：Nest 编译到 `dist` 时，把 `src/generated/prisma` 里的 Prisma runtime 文件也复制过去。
-
-否则启动时可能报错找不到 Prisma 运行时文件。
-
-### 8. 关闭 TypeScript incremental 编译
+### 10. 关闭 TypeScript incremental 编译
 
 修改文件：
 
@@ -287,16 +364,6 @@ tsconfig.json
 ```
 
 作用：避免增量缓存导致 `pnpm build` 显示成功，但 `dist/main.js` 没有正常生成。
-
-### 9. 添加 Prisma runtime 依赖
-
-执行：
-
-```bash
-pnpm add @prisma/client-runtime-utils@7.8.0
-```
-
-作用：解决 pnpm 环境下 Prisma runtime 找不到 `@prisma/client-runtime-utils` 的问题。
 
 ## 验证方式
 
