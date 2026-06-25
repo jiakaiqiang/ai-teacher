@@ -153,16 +153,39 @@ cd ~/projects/p1-monitor/backend
 ```bash
 cd ~/projects/p1-monitor/backend
 
-# 安装依赖（Prisma 7：额外装 driver adapter 与 dotenv）
-pnpm add @prisma/client @prisma/adapter-pg dotenv
-pnpm add -D prisma
+# 安装 Prisma 7 依赖
+pnpm add @prisma/client@7 @prisma/adapter-pg pg dotenv
+pnpm add -D prisma@7 tsx
 
 # 初始化 Prisma
 npx prisma init --datasource-provider postgresql
 
 # 你会看到创建了：
 # - prisma/schema.prisma（数据模型文件）
+# - prisma.config.ts（Prisma CLI 配置文件）
 # - .env 里自动加了 DATABASE_URL
+```
+
+**版本判断**：这里显式安装 `prisma@7` 和 `@prisma/client@7`。后续教程也使用 Prisma 7 的新写法：`provider = "prisma-client"`、显式 `output`、`prisma.config.ts` 管理 `DATABASE_URL`，以及 `@prisma/adapter-pg` 初始化 `PrismaClient`。
+
+#### 配置 `prisma.config.ts`
+
+Prisma 7 不再把数据库连接地址写在 `schema.prisma` 的 `datasource.url` 里，而是放到项目根目录的 `prisma.config.ts`。
+
+```typescript
+import "dotenv/config";
+import { defineConfig, env } from "prisma/config";
+
+export default defineConfig({
+  schema: "prisma/schema.prisma",
+  migrations: {
+    path: "prisma/migrations",
+    seed: "tsx prisma/seed.ts",
+  },
+  datasource: {
+    url: env("DATABASE_URL"),
+  },
+});
 ```
 
 **验证连接**：
@@ -180,13 +203,13 @@ npx prisma db execute --stdin <<< "SELECT 1"
 
 ```prisma
 generator client {
-  provider = "prisma-client"              // Prisma 7：Rust-free 客户端（旧 prisma-client-js 已弃用）
-  output   = "../src/generated/prisma"     // Prisma 7：output 必填，生成到 src 下方便 NestJS 导入
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // ============ 用户 ============
@@ -383,16 +406,17 @@ nest g service prisma
 
 ```typescript
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { PrismaClient } from '../generated/prisma'; // Prisma 7：从 output 路径导入；若解析失败改为显式入口如 '../generated/prisma/client.js'
 import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '../generated/prisma/client';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   constructor() {
-    // Prisma 7：必须传 driver adapter
-    super({
-      adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
+    const adapter = new PrismaPg({
+      connectionString: process.env.DATABASE_URL!,
     });
+
+    super({ adapter });
   }
 
   async onModuleInit() {
@@ -489,13 +513,15 @@ curl http://localhost:3000/api/health
 创建 `prisma/seed.ts`：
 
 ```typescript
-import 'dotenv/config'; // Prisma 7：不再自动加载 .env
-import { PrismaClient } from '../src/generated/prisma'; // Prisma 7：从 output 路径导入
+import 'dotenv/config';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '../src/generated/prisma/client';
 
-const prisma = new PrismaClient({
-  adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL!,
 });
+
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
   console.log('🌱 开始种子数据...');
@@ -542,19 +568,13 @@ main()
   });
 ```
 
-在 `package.json` 添加：
+Seed 命令已经在 `prisma.config.ts` 的 `migrations.seed` 中配置：
 
-```json
-{
-  "prisma": {
-    "seed": "ts-node prisma/seed.ts"
-  }
+```typescript
+migrations: {
+  path: "prisma/migrations",
+  seed: "tsx prisma/seed.ts",
 }
-```
-
-安装 ts-node：
-```bash
-pnpm add -D ts-node
 ```
 
 运行 seed：
@@ -594,6 +614,7 @@ npx prisma db seed
 
 3. **@@index([serverId, metricType, timestamp(sort: Desc)]) 的作用？**
    - 为什么要这样建索引？
+   - 答：在频繁的查询或者条件检索的场景 提高查询和检索的速度
 
 ## 📝 今日总结
 
