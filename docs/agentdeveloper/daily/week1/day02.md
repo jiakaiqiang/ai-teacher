@@ -19,7 +19,7 @@
   - 索引（B-tree / 复合索引）
   - 关系（一对一 / 一对多 / 多对多）
   
-- **B2. Prisma ORM**
+- **B2. Prisma ORM**（快速入门见 [prisma-orm-quickstart.md](../../quickstart/prisma-orm-quickstart.md)）
   - schema.prisma 语法
   - Migration 管理
   - Prisma Client 基础查询
@@ -143,11 +143,18 @@ cd ~/projects/p1-monitor/backend
 
 ### 任务 2：安装 Prisma（10 分钟）
 
+> ⚠️ **Prisma 7 与旧版差异**（本教程已对齐 Prisma 7）：
+> - generator 用 `provider = "prisma-client"` + 必填 `output`（旧 `prisma-client-js` 已弃用）
+> - 必装 **driver adapter** `@prisma/adapter-pg`，`new PrismaClient({ adapter })` 必传
+> - `migrate dev` / `db push` 不再自动 `generate`，需手动 `npx prisma generate`
+> - 不再自动加载 `.env`，代码需 `import 'dotenv/config'`（NestJS 用 ConfigModule 时已加载）
+> - 客户端 ESM-first；NestJS 保持默认 tsc 配置即可，按 `output` 路径导入
+
 ```bash
 cd ~/projects/p1-monitor/backend
 
-# 安装依赖
-pnpm add @prisma/client
+# 安装依赖（Prisma 7：额外装 driver adapter 与 dotenv）
+pnpm add @prisma/client @prisma/adapter-pg dotenv
 pnpm add -D prisma
 
 # 初始化 Prisma
@@ -173,7 +180,8 @@ npx prisma db execute --stdin <<< "SELECT 1"
 
 ```prisma
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"              // Prisma 7：Rust-free 客户端（旧 prisma-client-js 已弃用）
+  output   = "../src/generated/prisma"     // Prisma 7：output 必填，生成到 src 下方便 NestJS 导入
 }
 
 datasource db {
@@ -340,11 +348,12 @@ model Message {
 # 生成迁移文件并应用
 npx prisma migrate dev --name init
 
+# ⚠️ Prisma 7：migrate dev 不再自动 generate，需手动执行
+npx prisma generate
+
 # 你会看到：
-# ✔ Generated Prisma Client
-# ✔ Created 1 migration:
-#   migrations/20260618_init/migration.sql
 # ✔ Applied migration 20260618_init
+# ✔ Generated Prisma Client to ../src/generated/prisma
 
 # 检查数据库
 npx prisma studio
@@ -374,10 +383,18 @@ nest g service prisma
 
 ```typescript
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../generated/prisma'; // Prisma 7：从 output 路径导入；若解析失败改为显式入口如 '../generated/prisma/client.js'
+import { PrismaPg } from '@prisma/adapter-pg';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
+  constructor() {
+    // Prisma 7：必须传 driver adapter
+    super({
+      adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
+    });
+  }
+
   async onModuleInit() {
     await this.$connect();
     console.log('✅ Prisma connected');
@@ -472,9 +489,13 @@ curl http://localhost:3000/api/health
 创建 `prisma/seed.ts`：
 
 ```typescript
-import { PrismaClient } from '@prisma/client';
+import 'dotenv/config'; // Prisma 7：不再自动加载 .env
+import { PrismaClient } from '../src/generated/prisma'; // Prisma 7：从 output 路径导入
+import { PrismaPg } from '@prisma/adapter-pg';
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
+});
 
 async function main() {
   console.log('🌱 开始种子数据...');
@@ -555,6 +576,7 @@ npx prisma db seed
 
 - [ ] Postgres 连接成功（Supabase 或本地 Docker）
 - [ ] `npx prisma migrate dev` 成功创建 9 张表
+- [ ] `npx prisma generate` 成功生成 Client（Prisma 7 必须手动执行）
 - [ ] Prisma Studio 能看到所有表
 - [ ] PrismaService 全局可注入
 - [ ] `/api/health` 返回 `database.connected: true`

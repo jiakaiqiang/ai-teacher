@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>prisma-orm-quickstart</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+               "Microsoft YaHei", "Hiragino Sans GB", sans-serif;
+  font-size: 16px; line-height: 1.7; color: #24292f;
+  max-width: 1012px; margin: 0 auto; padding: 32px 24px 96px;
+  background: #fff;
+}
+h1, h2, h3, h4, h5, h6 { font-weight: 600; line-height: 1.25; margin: 28px 0 16px; }
+h1 { font-size: 2em; padding-bottom: .3em; border-bottom: 1px solid #d0d7de; }
+h2 { font-size: 1.5em; padding-bottom: .3em; border-bottom: 1px solid #d0d7de; }
+h3 { font-size: 1.25em; } h4 { font-size: 1em; }
+a { color: #0969da; text-decoration: none; }
+a:hover { text-decoration: underline; }
+p { margin: 0 0 16px; }
+ul, ol { padding-left: 2em; margin: 0 0 16px; }
+li { margin: 4px 0; }
+blockquote {
+  margin: 0 0 16px; padding: 0 1em; color: #57606a;
+  border-left: .25em solid #d0d7de;
+}
+blockquote > :first-child { margin-top: 0; }
+blockquote > :last-child { margin-bottom: 0; }
+hr { border: 0; border-top: 1px solid #d0d7de; margin: 32px 0; }
+/* 代码:等宽字体 + 横向滚动,保护 ASCII 流程图 */
+code, pre, kbd, samp {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+               "Courier New", monospace;
+  font-size: 13.5px;
+}
+code { padding: .2em .4em; background: rgba(175,184,193,.2); border-radius: 6px; }
+pre { margin: 0 0 16px; padding: 16px; overflow: auto; line-height: 1.45;
+       background: #f6f8fa; border-radius: 6px; }
+pre code { padding: 0; background: none; }
+/* 表格 */
+table { border-collapse: collapse; margin: 0 0 16px; display: block; width: 100%;
+         overflow: auto; }
+table th, table td { padding: 6px 13px; border: 1px solid #d0d7de; }
+table th { font-weight: 600; background: #f6f8fa; }
+table tr { background: #fff; }
+table tr:nth-child(2n) { background: #f6f8fa; }
+img { max-width: 100%; }
+pre { line-height: 125%; }
+td.linenos .normal { color: #666666; background-color: transparent; padding-left: 5px; padding-right: 5px; }
+span.linenos { color: #666666; background-color: transparent; padding-left: 5px; padding-right: 5px; }
+td.linenos .special { color: #000000; background-color: #ffffc0; padding-left: 5px; padding-right: 5px; }
+span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 5px; padding-right: 5px; }
+.codehilite .hll { background-color: #ffffcc }
+.codehilite { background: #f0f0f0; }
+.codehilite .c { color: #60A0B0; font-style: italic } /* Comment */
+.codehilite .err { border: 1px solid #F00 } /* Error */
+.codehilite .k { color: #007020; font-weight: bold } /* Keyword */
+.codehilite .o { color: #666 } /* Operator */
+.codehilite .ch { color: #60A0B0; font-style: italic } /* Comment.Hashbang */
+.codehilite .cm { color: #60A0B0; font-style: italic } /* Comment.Multiline */
+.codehilite .cp { color: #007020 } /* Comment.Preproc */
+.codehilite .cpf { color: #60A0B0; font-style: italic } /* Comment.PreprocFile */
+.codehilite .c1 { color: #60A0B0; font-style: italic } /* Comment.Single */
+.codehilite .cs { color: #60A0B0; background-color: #FFF0F0 } /* Comment.Special */
+.codehilite .gd { color: #A00000 } /* Generic.Deleted */
+.codehilite .ge { font-style: italic } /* Generic.Emph */
+.codehilite .ges { font-weight: bold; font-style: italic } /* Generic.EmphStrong */
+.codehilite .gr { color: #F00 } /* Generic.Error */
+.codehilite .gh { color: #000080; font-weight: bold } /* Generic.Heading */
+.codehilite .gi { color: #00A000 } /* Generic.Inserted */
+.codehilite .go { color: #888 } /* Generic.Output */
+.codehilite .gp { color: #C65D09; font-weight: bold } /* Generic.Prompt */
+.codehilite .gs { font-weight: bold } /* Generic.Strong */
+.codehilite .gu { color: #800080; font-weight: bold } /* Generic.Subheading */
+.codehilite .gt { color: #04D } /* Generic.Traceback */
+.codehilite .kc { color: #007020; font-weight: bold } /* Keyword.Constant */
+.codehilite .kd { color: #007020; font-weight: bold } /* Keyword.Declaration */
+.codehilite .kn { color: #007020; font-weight: bold } /* Keyword.Namespace */
+.codehilite .kp { color: #007020 } /* Keyword.Pseudo */
+.codehilite .kr { color: #007020; font-weight: bold } /* Keyword.Reserved */
+.codehilite .kt { color: #902000 } /* Keyword.Type */
+.codehilite .m { color: #40A070 } /* Literal.Number */
+.codehilite .s { color: #4070A0 } /* Literal.String */
+.codehilite .na { color: #4070A0 } /* Name.Attribute */
+.codehilite .nb { color: #007020 } /* Name.Builtin */
+.codehilite .nc { color: #0E84B5; font-weight: bold } /* Name.Class */
+.codehilite .no { color: #60ADD5 } /* Name.Constant */
+.codehilite .nd { color: #555; font-weight: bold } /* Name.Decorator */
+.codehilite .ni { color: #D55537; font-weight: bold } /* Name.Entity */
+.codehilite .ne { color: #007020 } /* Name.Exception */
+.codehilite .nf { color: #06287E } /* Name.Function */
+.codehilite .nl { color: #002070; font-weight: bold } /* Name.Label */
+.codehilite .nn { color: #0E84B5; font-weight: bold } /* Name.Namespace */
+.codehilite .nt { color: #062873; font-weight: bold } /* Name.Tag */
+.codehilite .nv { color: #BB60D5 } /* Name.Variable */
+.codehilite .ow { color: #007020; font-weight: bold } /* Operator.Word */
+.codehilite .w { color: #BBB } /* Text.Whitespace */
+.codehilite .mb { color: #40A070 } /* Literal.Number.Bin */
+.codehilite .mf { color: #40A070 } /* Literal.Number.Float */
+.codehilite .mh { color: #40A070 } /* Literal.Number.Hex */
+.codehilite .mi { color: #40A070 } /* Literal.Number.Integer */
+.codehilite .mo { color: #40A070 } /* Literal.Number.Oct */
+.codehilite .sa { color: #4070A0 } /* Literal.String.Affix */
+.codehilite .sb { color: #4070A0 } /* Literal.String.Backtick */
+.codehilite .sc { color: #4070A0 } /* Literal.String.Char */
+.codehilite .dl { color: #4070A0 } /* Literal.String.Delimiter */
+.codehilite .sd { color: #4070A0; font-style: italic } /* Literal.String.Doc */
+.codehilite .s2 { color: #4070A0 } /* Literal.String.Double */
+.codehilite .se { color: #4070A0; font-weight: bold } /* Literal.String.Escape */
+.codehilite .sh { color: #4070A0 } /* Literal.String.Heredoc */
+.codehilite .si { color: #70A0D0; font-style: italic } /* Literal.String.Interpol */
+.codehilite .sx { color: #C65D09 } /* Literal.String.Other */
+.codehilite .sr { color: #235388 } /* Literal.String.Regex */
+.codehilite .s1 { color: #4070A0 } /* Literal.String.Single */
+.codehilite .ss { color: #517918 } /* Literal.String.Symbol */
+.codehilite .bp { color: #007020 } /* Name.Builtin.Pseudo */
+.codehilite .fm { color: #06287E } /* Name.Function.Magic */
+.codehilite .vc { color: #BB60D5 } /* Name.Variable.Class */
+.codehilite .vg { color: #BB60D5 } /* Name.Variable.Global */
+.codehilite .vi { color: #BB60D5 } /* Name.Variable.Instance */
+.codehilite .vm { color: #BB60D5 } /* Name.Variable.Magic */
+.codehilite .il { color: #40A070 } /* Literal.Number.Integer.Long */
+</style>
+</head>
+<body>
+<h1 id="prisma-orm-prisma-7">Prisma ORM 快速入门（Prisma 7 · 中文教程）<a class="headerlink" href="#prisma-orm-prisma-7" title="Permanent link">#</a></h1>
+<blockquote>
+<p>写给"前端转后端"的同学：从 0 跑通完整 CRUD + 迁移 + 事务 + 种子的 Prisma 最小可运行教程。所有命令与代码基于 <strong>Prisma ORM 7.x</strong>（Rust-free、ESM-first、driver adapter 必需）的最新稳定写法，不照搬 v5/v6 旧模板。</p>
+</blockquote>
+<hr />
+<h2 id="_1">📌 版本与适用性（先读）<a class="headerlink" href="#_1" title="Permanent link">#</a></h2>
+<ul>
+<li>本教程基于 <strong>Prisma ORM 7.x</strong>（2026 年 6 月当前稳定大版本）。</li>
+<li>先确认你本机版本：</li>
+</ul>
+<p><code>bash
+  npx prisma -v</code></p>
+<ul>
+<li>⚠️ 如果你还在 <strong>Prisma 5/6</strong>，下列写法<strong>不完全适用</strong>。v7 的破坏性变化（<code>prisma-client</code> generator、<code>output</code> 必填、driver adapter 必需、ESM、不再自动 <code>generate</code>/<code>seed</code>、<code>.env</code> 不自动加载）在旧版本上会报错或多余。请对照官方升级指南：https://www.prisma.io/docs/guides/upgrade-prisma-orm/v7</li>
+<li>v7 仍有少量新 API 在不同小版本可能略有差异（如 <code>prisma.config.ts</code> 的 <code>defineConfig</code>、生成客户端的入口文件名），遇到不一致时<strong>以官方文档和你实际生成的目录为准</strong>。</li>
+</ul>
+<hr />
+<h2 id="0">0. 全链路一图流<a class="headerlink" href="#0" title="Permanent link">#</a></h2>
+<div class="codehilite"><pre><span></span><code>┌─────────────────────────────────────────────────────────────────────────┐
+│  Prisma 7 全链路                                                         │
+│                                                                          │
+│  [前置] Node &gt;=20.19  +  Postgres (Docker 一行起库)                       │
+│     │                                                                    │
+│     ▼                                                                    │
+│  [安装] prisma(D) + @prisma/client + @prisma/adapter-pg + dotenv         │
+│     │  package.json: &quot;type&quot;:&quot;module&quot;                                     │
+│     ▼                                                                    │
+│  [init] npx prisma init  →  schema.prisma + .env (+ 建议 prisma.config.ts)│
+│     │                                                                    │
+│     ▼                                                                    │
+│  [建模] schema.prisma: datasource / generator(prisma-client+output) /     │
+│         model User 1—N Post + @@map + @@index                            │
+│     │                                                                    │
+│     ▼                                                                    │
+│  [迁移] npx prisma migrate dev --name init   →  生成 SQL + 应用到库        │
+│     │  ⚠️ v7 不再自动 generate → 手动 npx prisma generate                 │
+│     ▼                                                                    │
+│  [Client] import { PrismaClient } from &#39;./generated/client&#39;              │
+│           new PrismaClient({ adapter: new PrismaPg({connectionString}) }) │
+│     │                                                                    │
+│     ▼                                                                    │
+│  [CRUD] create / findUnique / findMany / update / delete                 │
+│     │                                                                    │
+│     ▼                                                                    │
+│  [关系] include 嵌套查询 + 嵌套写入                                       │
+│     │                                                                    │
+│     ▼                                                                    │
+│  [事务] $transaction(数组)   /   $transaction(回调)                      │
+│     │                                                                    │
+│     ▼                                                                    │
+│  [seed] prisma db seed  (package.json prisma.seed 配置)                  │
+│     │                                                                    │
+│     ▼                                                                    │
+│  [Studio] npx prisma studio   可视化查看/编辑数据                         │
+└─────────────────────────────────────────────────────────────────────────┘
+</code></pre></div>
+
+<p><strong>一句话总结</strong>：Prisma 7 用一份 <code>schema.prisma</code> 作为"单一事实源"，通过 <code>migrate</code> 生成迁移、<code>generate</code> 产出类型安全的 Client，再用 driver adapter 连库做 CRUD，全程类型推断 + 关系查询 + 事务一体化。</p>
+<hr />
+<h2 id="1-node-postgres">① 前置：Node + Postgres<a class="headerlink" href="#1-node-postgres" title="Permanent link">#</a></h2>
+<h3 id="node">Node 版本<a class="headerlink" href="#node" title="Permanent link">#</a></h3>
+<p>⚠️ Prisma 7 要求 <strong>Node &gt;= 20.19.0</strong>（推荐 22.x），TypeScript &gt;= 5.4.0（推荐 5.9.x）。</p>
+<div class="codehilite"><pre><span></span><code>node<span class="w"> </span>-v
+<span class="c1"># 预期: v22.x.x</span>
+</code></pre></div>
+
+<p>✅ 成功标志：版本号 &gt;= 20.19.0。</p>
+<h3 id="docker-postgres">Docker 一行起 Postgres<a class="headerlink" href="#docker-postgres" title="Permanent link">#</a></h3>
+<div class="codehilite"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>--name<span class="w"> </span>pg-dev<span class="w"> </span>-e<span class="w"> </span><span class="nv">POSTGRES_PASSWORD</span><span class="o">=</span>postgres<span class="w"> </span>-e<span class="w"> </span><span class="nv">POSTGRES_DB</span><span class="o">=</span>blog<span class="w"> </span>-p<span class="w"> </span><span class="m">5432</span>:5432<span class="w"> </span>-d<span class="w"> </span>postgres:16
+</code></pre></div>
+
+<p>✅ 成功标志：</p>
+<div class="codehilite"><pre><span></span><code>docker<span class="w"> </span>ps<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>pg-dev
+<span class="c1"># 输出: ... pg-dev ... postgres:16 ... 0.0.0.0:5432-&gt;5432/tcp</span>
+</code></pre></div>
+
+<p>⚠️ 如果本机 5432 已占用，改成 <code>-p 5433:5432</code> 并在连接串里用 5433。</p>
+<hr />
+<h2 id="2">② 安装依赖<a class="headerlink" href="#2" title="Permanent link">#</a></h2>
+<div class="codehilite"><pre><span></span><code><span class="c1"># 初始化项目</span>
+mkdir<span class="w"> </span>prisma-blog<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>prisma-blog
+npm<span class="w"> </span>init<span class="w"> </span>-y
+
+<span class="c1"># CLI 工具（开发依赖）</span>
+npm<span class="w"> </span>install<span class="w"> </span>prisma<span class="w"> </span>--save-dev
+
+<span class="c1"># 运行时客户端</span>
+npm<span class="w"> </span>install<span class="w"> </span>@prisma/client
+
+<span class="c1"># ⚠️ Prisma 7 必装 driver adapter（Postgres 用这个）</span>
+npm<span class="w"> </span>install<span class="w"> </span>@prisma/adapter-pg
+
+<span class="c1"># 环境变量加载（v7 不再自动加载 .env）</span>
+npm<span class="w"> </span>install<span class="w"> </span>dotenv
+</code></pre></div>
+
+<p>✅ 成功标志：<code>package.json</code> 的 <code>dependencies</code> 出现 <code>@prisma/client</code>、<code>@prisma/adapter-pg</code>、<code>dotenv</code>，<code>devDependencies</code> 出现 <code>prisma</code>。</p>
+<h3 id="packagejsonv7-esm-first">配置 package.json（v7 是 ESM-first）<a class="headerlink" href="#packagejsonv7-esm-first" title="Permanent link">#</a></h3>
+<div class="codehilite"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;prisma-blog&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1.0.0&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;module&quot;</span><span class="p">,</span><span class="w">                </span><span class="c1">// ⚠️ 必加，否则 ESM 客户端报错</span>
+<span class="w">  </span><span class="nt">&quot;scripts&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;dev&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;node src/index.js&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;seed&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;node prisma/seed.js&quot;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<p>⚠️ 如果用 TypeScript：<code>tsconfig.json</code> 建议 <code>module: ESNext</code>、<code>moduleResolution: bundler</code>、<code>target: ES2023</code>。</p>
+<hr />
+<h2 id="3-prisma-init">③ prisma init 初始化<a class="headerlink" href="#3-prisma-init" title="Permanent link">#</a></h2>
+<div class="codehilite"><pre><span></span><code>npx<span class="w"> </span>prisma<span class="w"> </span>init<span class="w"> </span>--datasource-provider<span class="w"> </span>postgresql
+</code></pre></div>
+
+<p>这会生成：<br />
+- <code>prisma/schema.prisma</code><br />
+- <code>.env</code>（写入 <code>DATABASE_URL</code> 占位）</p>
+<h3 id="v7-prismaconfigts">v7 建议：创建 prisma.config.ts<a class="headerlink" href="#v7-prismaconfigts" title="Permanent link">#</a></h3>
+<p>⚠️ v7 把 CLI 配置集中到 <code>prisma.config.ts</code>，schema 里的 <code>url/directUrl/shadowDatabaseUrl</code> 被废弃。</p>
+<p>项目根目录新建 <code>prisma.config.ts</code>：</p>
+<div class="codehilite"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="s1">&#39;dotenv/config&#39;</span><span class="w">  </span><span class="c1">// ⚠️ v7 不再自动加载 .env，必须显式加载</span>
+<span class="k">import</span><span class="w"> </span><span class="nx">path</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;node:path&#39;</span>
+<span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">defineConfig</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;prisma/config&#39;</span><span class="w">  </span><span class="c1">// 具体导入路径以你所用的 Prisma 版本官方文档为准</span>
+
+<span class="k">export</span><span class="w"> </span><span class="k">default</span><span class="w"> </span><span class="nx">defineConfig</span><span class="p">({</span>
+<span class="w">  </span><span class="nx">schema</span><span class="o">:</span><span class="w"> </span><span class="kt">path.join</span><span class="p">(</span><span class="s1">&#39;prisma&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;schema.prisma&#39;</span><span class="p">),</span>
+<span class="w">  </span><span class="nx">migrations</span><span class="o">:</span><span class="w"> </span><span class="kt">path.join</span><span class="p">(</span><span class="s1">&#39;prisma&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;migrations&#39;</span><span class="p">),</span>
+<span class="p">})</span>
+</code></pre></div>
+
+<h3 id="env">.env<a class="headerlink" href="#env" title="Permanent link">#</a></h3>
+<div class="codehilite"><pre><span></span><code>DATABASE_URL=postgresql://postgres:postgres@localhost:5432/blog
+</code></pre></div>
+
+<p>✅ 成功标志：<code>prisma/schema.prisma</code> 文件存在；<code>npx prisma validate</code> 输出 <code>The schema at prisma/schema.prisma is valid 🚀</code>。</p>
+<hr />
+<h2 id="4-user-post">④ 定义模型（User + Post 博客场景）<a class="headerlink" href="#4-user-post" title="Permanent link">#</a></h2>
+<p>把 <code>prisma/schema.prisma</code> 改成：</p>
+<div class="codehilite"><pre><span></span><code>// 数据源：v7 推荐把 url 放 prisma.config.ts，这里保留占位即可
+generator client {
+  provider = &quot;prisma-client&quot;          // ⚠️ v7 新版 Rust-free 客户端；旧 &quot;prisma-client-js&quot; 已弃用
+  output   = &quot;./generated/client&quot;     // ⚠️ v7 必填，不再默认进 node_modules
+}
+
+datasource db {
+  provider = &quot;postgresql&quot;
+  url      = env(&quot;DATABASE_URL&quot;)
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String?  @map(&quot;name&quot;)     // 字段级映射: Prisma 字段 name → 列 name
+  createdAt DateTime @default(now()) @map(&quot;created_at&quot;)
+
+  posts Post[]                         // 一对多: 一个用户有多篇文章
+
+  @@map(&quot;users&quot;)                       // 模型级映射: User → 表 users
+  @@index([name])                      // 单字段索引
+}
+
+model Post {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String?
+  published Boolean  @default(false)
+  authorId  Int      @map(&quot;author_id&quot;) // 外键字段
+
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@map(&quot;posts&quot;)
+  @@index([authorId])                  // 外键索引，加速关系查询
+  @@index([published])                 // 常用过滤字段索引
+}
+</code></pre></div>
+
+<p>要点速记：<br />
+- <code>@@map("users")</code>：模型映射到表名（复数下划线规范）。<br />
+- <code>@map("created_at")</code>：字段映射到列名（数据库用 snake_case，Prisma 用 camelCase）。<br />
+- <code>@relation(... onDelete: Cascade)</code>：删除用户时级联删除其文章。<br />
+- <code>@@index([...])</code>：复合/单字段索引，加快查询。</p>
+<p>✅ 成功标志：</p>
+<div class="codehilite"><pre><span></span><code>npx<span class="w"> </span>prisma<span class="w"> </span>validate
+<span class="c1"># The schema at prisma/schema.prisma is valid 🚀</span>
+</code></pre></div>
+
+<hr />
+<h2 id="5-migrate-dev">⑤ migrate dev 生成并应用迁移<a class="headerlink" href="#5-migrate-dev" title="Permanent link">#</a></h2>
+<div class="codehilite"><pre><span></span><code>npx<span class="w"> </span>prisma<span class="w"> </span>migrate<span class="w"> </span>dev<span class="w"> </span>--name<span class="w"> </span>init
+</code></pre></div>
+
+<p>这会：<br />
+1. 在 <code>prisma/migrations/&lt;时间戳&gt;_init/migration.sql</code> 生成 SQL。<br />
+2. 应用到 <code>blog</code> 库（建表 <code>users</code> / <code>posts</code>）。</p>
+<p>✅ 成功标志：</p>
+<div class="codehilite"><pre><span></span><code>✔ Generated Prisma Client to ./prisma/generated/client in 1.2s
+✔ Applied migration 20260622000000_init
+Your database is now in sync with your schema.
+</code></pre></div>
+
+<p>⚠️ <strong>v7 破坏性变化</strong>：<code>migrate dev</code> 在 v7 之前会自动 <code>generate</code> + <code>seed</code>，v7 起不再自动执行。如果上面的输出没看到 "Generated Prisma Client"，手动跑：</p>
+<div class="codehilite"><pre><span></span><code>npx<span class="w"> </span>prisma<span class="w"> </span>generate
+</code></pre></div>
+
+<p>⚠️ <code>migrate dev</code> 仅用于开发，<strong>绝不用于生产</strong>（生产用 <code>migrate deploy</code>）。它检测到 drift 会提示重置库，可能丢数据。</p>
+<hr />
+<h2 id="6-prisma-client">⑥ 生成 Prisma Client<a class="headerlink" href="#6-prisma-client" title="Permanent link">#</a></h2>
+<p>每次改 schema 都要重新 generate：</p>
+<div class="codehilite"><pre><span></span><code>npx<span class="w"> </span>prisma<span class="w"> </span>generate
+</code></pre></div>
+
+<p>✅ 成功标志：</p>
+<div class="codehilite"><pre><span></span><code>✔ Generated Prisma Client (v7.x.x) to ./prisma/generated/client in 1.2s
+</code></pre></div>
+
+<p>⚠️ v7 不再自动把客户端放进 <code>node_modules/.prisma/client</code>，导入路径必须按 <code>output</code> 走，即相对 schema 文件的 <code>./generated/client</code>（在项目里通常是 <code>./prisma/generated/client</code>）。<strong>入口文件名以实际生成的目录为准</strong>（可能是 <code>client.js</code>、<code>index.js</code> 或其它，先 <code>ls prisma/generated/client</code> 看一眼）。</p>
+<hr />
+<h2 id="7-crud">⑦ CRUD 基础查询<a class="headerlink" href="#7-crud" title="Permanent link">#</a></h2>
+<p>新建 <code>src/client.js</code>：</p>
+<div class="codehilite"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="s1">&#39;dotenv/config&#39;</span>
+<span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">PrismaClient</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;../prisma/generated/client/client.js&#39;</span><span class="w">  </span><span class="c1">// ⚠️ 入口文件名以实际生成为准</span>
+<span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">PrismaPg</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@prisma/adapter-pg&#39;</span>
+
+<span class="c1">// ⚠️ v7 必须传入 driver adapter</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">adapter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">PrismaPg</span><span class="p">({</span><span class="w"> </span><span class="nx">connectionString</span><span class="o">:</span><span class="w"> </span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">DATABASE_URL</span><span class="w"> </span><span class="p">})</span>
+<span class="k">export</span><span class="w"> </span><span class="kd">const</span><span class="w"> </span><span class="nx">prisma</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">PrismaClient</span><span class="p">({</span><span class="w"> </span><span class="nx">adapter</span><span class="w"> </span><span class="p">})</span>
+</code></pre></div>
+
+<blockquote>
+<p>说明：<code>generated/client</code> 的入口文件名可能是 <code>client.js</code> 或 <code>index.js</code>，以你实际生成的目录为准（<code>ls prisma/generated/client</code> 看一眼）。下面示例代码都从 <code>./client.js</code> 导入 <code>prisma</code>。</p>
+</blockquote>
+<h3 id="71-create">7.1 create（创建）<a class="headerlink" href="#71-create" title="Permanent link">#</a></h3>
+<div class="codehilite"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">prisma</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;./client.js&#39;</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">prisma</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">create</span><span class="p">({</span>
+<span class="w">  </span><span class="nx">data</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">email</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;alice@prisma.io&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Alice&#39;</span><span class="w"> </span><span class="p">},</span>
+<span class="p">})</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">user</span><span class="p">)</span>
+</code></pre></div>
+
+<p>预期输出：</p>
+<div class="codehilite"><pre><span></span><code>{ id: 1, email: &#39;alice@prisma.io&#39;, name: &#39;Alice&#39;, createdAt: 2026-06-22T... }
+</code></pre></div>
+
+<h3 id="72-findunique">7.2 findUnique（按唯一键查单条）<a class="headerlink" href="#72-findunique" title="Permanent link">#</a></h3>
+<div class="codehilite"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">found</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">prisma</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">findUnique</span><span class="p">({</span>
+<span class="w">  </span><span class="nx">where</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">email</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;alice@prisma.io&#39;</span><span class="w"> </span><span class="p">},</span>
+<span class="p">})</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">found</span><span class="p">)</span>
+</code></pre></div>
+
+<p>预期输出：</p>
+<div class="codehilite"><pre><span></span><code>{ id: 1, email: &#39;alice@prisma.io&#39;, name: &#39;Alice&#39;, createdAt: 2026-06-22T... }
+</code></pre></div>
+
+<h3 id="73-findmany">7.3 findMany（多条 + 过滤 + 排序 + 分页）<a class="headerlink" href="#73-findmany" title="Permanent link">#</a></h3>
+<div class="codehilite"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">list</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">prisma</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">findMany</span><span class="p">({</span>
+<span class="w">  </span><span class="nx">where</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">contains</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;A&#39;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="nx">orderBy</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;desc&#39;</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="nx">take</span><span class="o">:</span><span class="w"> </span><span class="mf">10</span><span class="p">,</span>
+<span class="p">})</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">list</span><span class="p">)</span>
+</code></pre></div>
+
+<p>预期输出：</p>
+<div class="codehilite"><pre><span></span><code>[ { id: 1, email: &#39;alice@prisma.io&#39;, name: &#39;Alice&#39;, createdAt: ... } ]
+</code></pre></div>
+
+<h3 id="74-update">7.4 update（更新）<a class="headerlink" href="#74-update" title="Permanent link">#</a></h3>
+<div class="codehilite"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">updated</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">prisma</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">update</span><span class="p">({</span>
+<span class="w">  </span><span class="nx">where</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="nx">data</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Alice Wang&#39;</span><span class="w"> </span><span class="p">},</span>
+<span class="p">})</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">updated</span><span class="p">)</span>
+</code></pre></div>
+
+<p>预期输出：</p>
+<div class="codehilite"><pre><span></span><code>{ id: 1, email: &#39;alice@prisma.io&#39;, name: &#39;Alice Wang&#39;, createdAt: ... }
+</code></pre></div>
+
+<h3 id="75-delete">7.5 delete（删除）<a class="headerlink" href="#75-delete" title="Permanent link">#</a></h3>
+<div class="codehilite"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">deleted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">prisma</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="ow">delete</span><span class="p">({</span><span class="w"> </span><span class="nx">where</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">})</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">deleted</span><span class="p">)</span>
+</code></pre></div>
+
+<p>预期输出（返回被删除的记录）：</p>
+<div class="codehilite"><pre><span></span><code>{ id: 1, email: &#39;alice@prisma.io&#39;, name: &#39;Alice Wang&#39;, createdAt: ... }
+</code></pre></div>
+
+<p>✅ 成功标志：上面 5 段代码都能 <code>node src/xxx.js</code> 跑通且打印符合预期。</p>
+<hr />
+<h2 id="8-include">⑧ 关系查询（include / 嵌套写入）<a class="headerlink" href="#8-include" title="Permanent link">#</a></h2>
+<h3 id="81">8.1 嵌套写入：一次性建用户 + 文章<a class="headerlink" href="#81" title="Permanent link">#</a></h3>
+<div class="codehilite"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">u</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">prisma</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">create</span><span class="p">({</span>
+<span class="w">  </span><span class="nx">data</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">email</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;bob@prisma.io&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Bob&#39;</span><span class="p">,</span>
+<span class="w">    </span><span class="nx">posts</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">create</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="p">{</span><span class="w"> </span><span class="nx">title</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Hello Prisma&#39;</span><span class="p">,</span><span class="w">  </span><span class="nx">content</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;...&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">published</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">},</span>
+<span class="w">        </span><span class="p">{</span><span class="w"> </span><span class="nx">title</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;N+1 is bad&#39;</span><span class="p">,</span><span class="w">    </span><span class="nx">content</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;...&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">published</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="w"> </span><span class="p">},</span>
+<span class="w">      </span><span class="p">],</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="p">})</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">u</span><span class="p">)</span>
+</code></pre></div>
+
+<p>✅ 成功标志：<code>users</code> 表 1 条，<code>posts</code> 表 2 条，外键 <code>author_id</code> 正确指向该用户。</p>
+<h3 id="82-include-n1">8.2 include 预加载关系（解决 N+1）<a class="headerlink" href="#82-include-n1" title="Permanent link">#</a></h3>
+<div class="codehilite"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">withPosts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">prisma</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">findUnique</span><span class="p">({</span>
+<span class="w">  </span><span class="nx">where</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="nx">u</span><span class="p">.</span><span class="nx">id</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="nx">include</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">posts</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">},</span>
+<span class="p">})</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">dir</span><span class="p">(</span><span class="nx">withPosts</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">depth</span><span class="o">:</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="p">})</span>
+</code></pre></div>
+
+<p>预期输出：</p>
+<div class="codehilite"><pre><span></span><code>{
+  id: 2,
+  email: &#39;bob@prisma.io&#39;,
+  name: &#39;Bob&#39;,
+  createdAt: ...,
+  posts: [
+    { id: 1, title: &#39;Hello Prisma&#39;, content: &#39;...&#39;, published: true, authorId: 2 },
+    { id: 2, title: &#39;N+1 is bad&#39;,   content: &#39;...&#39;, published: false, authorId: 2 },
+  ]
+}
+</code></pre></div>
+
+<h3 id="83-include">8.3 嵌套 include + 过滤<a class="headerlink" href="#83-include" title="Permanent link">#</a></h3>
+<div class="codehilite"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">prisma</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">findUnique</span><span class="p">({</span>
+<span class="w">  </span><span class="nx">where</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="nx">u</span><span class="p">.</span><span class="nx">id</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="nx">include</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">posts</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">where</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">published</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">},</span>
+<span class="w">      </span><span class="nx">orderBy</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;asc&#39;</span><span class="w"> </span><span class="p">},</span>
+<span class="w">      </span><span class="nx">select</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nx">title</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="p">})</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">dir</span><span class="p">(</span><span class="nx">result</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">depth</span><span class="o">:</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="p">})</span>
+</code></pre></div>
+
+<p>预期输出（只看已发布文章，且只取 id/title）：</p>
+<div class="codehilite"><pre><span></span><code>{ id: 2, email: &#39;bob@prisma.io&#39;, name: &#39;Bob&#39;, createdAt: ...,
+  posts: [ { id: 1, title: &#39;Hello Prisma&#39; } ] }
+</code></pre></div>
+
+<p>⚠️ <code>select</code> 和 <code>include</code> 不能在同一查询的<strong>同一层</strong>同时使用（嵌套层级里可分别用）。</p>
+<hr />
+<h2 id="9-transaction">⑨ 事务（$transaction 两种写法）<a class="headerlink" href="#9-transaction" title="Permanent link">#</a></h2>
+<h3 id="91">9.1 数组形式（顺序执行，任一失败全部回滚）<a class="headerlink" href="#91" title="Permanent link">#</a></h3>
+<div class="codehilite"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="p">[</span><span class="nx">newUser</span><span class="p">,</span><span class="w"> </span><span class="nx">newPost</span><span class="p">]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">prisma</span><span class="p">.</span><span class="nx">$transaction</span><span class="p">([</span>
+<span class="w">  </span><span class="nx">prisma</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">create</span><span class="p">({</span><span class="w"> </span><span class="nx">data</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">email</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;carol@prisma.io&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Carol&#39;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}),</span>
+<span class="w">  </span><span class="nx">prisma</span><span class="p">.</span><span class="nx">post</span><span class="p">.</span><span class="nx">create</span><span class="p">({</span>
+<span class="w">    </span><span class="nx">data</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">title</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Tx Array&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">author</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">connect</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">email</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;carol@prisma.io&#39;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="p">}),</span>
+<span class="p">])</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">newUser</span><span class="p">,</span><span class="w"> </span><span class="nx">newPost</span><span class="p">)</span>
+</code></pre></div>
+
+<p>✅ 成功标志：两张表都成功插入；若把第二条故意改错（如 <code>author.connect</code> 一个不存在的 email），整个事务回滚，用户也不会被插入。</p>
+<h3 id="92-sql">9.2 回调/交互式形式（可在事务内写任意逻辑、含原始 SQL）<a class="headerlink" href="#92-sql" title="Permanent link">#</a></h3>
+<div class="codehilite"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">prisma</span><span class="p">.</span><span class="nx">$transaction</span><span class="p">(</span><span class="k">async</span><span class="w"> </span><span class="p">(</span><span class="nx">tx</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">tx</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">create</span><span class="p">({</span><span class="w"> </span><span class="nx">data</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">email</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;dave@prisma.io&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Dave&#39;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">})</span>
+<span class="w">  </span><span class="k">await</span><span class="w"> </span><span class="nx">tx</span><span class="p">.</span><span class="nx">post</span><span class="p">.</span><span class="nx">create</span><span class="p">({</span>
+<span class="w">    </span><span class="nx">data</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">title</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Tx Callback&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">author</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">connect</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="nx">user</span><span class="p">.</span><span class="nx">id</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">},</span>
+<span class="w">  </span><span class="p">})</span>
+<span class="w">  </span><span class="c1">// 原始 SQL 也能跑</span>
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">rows</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">tx</span><span class="p">.</span><span class="nx">$queryRaw</span><span class="sb">`SELECT count(*)::int AS c FROM &quot;posts&quot;`</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">userId</span><span class="o">:</span><span class="w"> </span><span class="nx">user</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span><span class="w"> </span><span class="nx">postCount</span><span class="o">:</span><span class="w"> </span><span class="nx">rows</span><span class="p">[</span><span class="mf">0</span><span class="p">].</span><span class="nx">c</span><span class="w"> </span><span class="p">}</span>
+<span class="p">})</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">result</span><span class="p">)</span>
+</code></pre></div>
+
+<p>预期输出：</p>
+<div class="codehilite"><pre><span></span><code>{ userId: 4, postCount: &lt;当前 posts 总数&gt; }
+</code></pre></div>
+
+<p>⚠️ <code>$queryRaw</code> 用 tagged template 参数化，不要用 <code>$queryRawUnsafe</code> 拼接用户输入，否则有 SQL 注入风险。</p>
+<hr />
+<h2 id="10-seed">⑩ seed 种子脚本<a class="headerlink" href="#10-seed" title="Permanent link">#</a></h2>
+<h3 id="prismaseedjs">新建 <code>prisma/seed.js</code><a class="headerlink" href="#prismaseedjs" title="Permanent link">#</a></h3>
+<div class="codehilite"><pre><span></span><code><span class="k">import</span><span class="w"> </span><span class="s1">&#39;dotenv/config&#39;</span>
+<span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">PrismaClient</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;../prisma/generated/client/client.js&#39;</span><span class="w">  </span><span class="c1">// ⚠️ 入口文件名以实际生成为准</span>
+<span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">PrismaPg</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;@prisma/adapter-pg&#39;</span>
+
+<span class="kd">const</span><span class="w"> </span><span class="nx">adapter</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">PrismaPg</span><span class="p">({</span><span class="w"> </span><span class="nx">connectionString</span><span class="o">:</span><span class="w"> </span><span class="nx">process</span><span class="p">.</span><span class="nx">env</span><span class="p">.</span><span class="nx">DATABASE_URL</span><span class="w"> </span><span class="p">})</span>
+<span class="kd">const</span><span class="w"> </span><span class="nx">prisma</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">PrismaClient</span><span class="p">({</span><span class="w"> </span><span class="nx">adapter</span><span class="w"> </span><span class="p">})</span>
+
+<span class="k">async</span><span class="w"> </span><span class="kd">function</span><span class="w"> </span><span class="nx">main</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">await</span><span class="w"> </span><span class="nx">prisma</span><span class="p">.</span><span class="nx">post</span><span class="p">.</span><span class="nx">deleteMany</span><span class="p">()</span>
+<span class="w">  </span><span class="k">await</span><span class="w"> </span><span class="nx">prisma</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">deleteMany</span><span class="p">()</span>
+
+<span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">alice</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">prisma</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">create</span><span class="p">({</span>
+<span class="w">    </span><span class="nx">data</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nx">email</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;alice@prisma.io&#39;</span><span class="p">,</span>
+<span class="w">      </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Alice&#39;</span><span class="p">,</span>
+<span class="w">      </span><span class="nx">posts</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">create</span><span class="o">:</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="nx">title</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Seed Post 1&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">published</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">}]</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="p">},</span>
+<span class="w">  </span><span class="p">})</span>
+<span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Seeded:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">alice</span><span class="p">.</span><span class="nx">email</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="nx">main</span><span class="p">()</span>
+<span class="w">  </span><span class="p">.</span><span class="k">catch</span><span class="p">((</span><span class="nx">e</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="nx">e</span><span class="p">);</span><span class="w"> </span><span class="nx">process</span><span class="p">.</span><span class="nx">exit</span><span class="p">(</span><span class="mf">1</span><span class="p">)</span><span class="w"> </span><span class="p">})</span>
+<span class="w">  </span><span class="p">.</span><span class="k">finally</span><span class="p">(</span><span class="k">async</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">prisma</span><span class="p">.</span><span class="nx">$disconnect</span><span class="p">()</span><span class="w"> </span><span class="p">})</span>
+</code></pre></div>
+
+<h3 id="packagejson">package.json 加配置<a class="headerlink" href="#packagejson" title="Permanent link">#</a></h3>
+<p>⚠️ v7 起 <code>migrate reset</code> / <code>migrate dev</code> 不再自动 seed，需手动 <code>prisma db seed</code>，且 seed 配置在 <code>package.json</code> 里：</p>
+<div class="codehilite"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;prisma-blog&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;module&quot;</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">&quot;prisma&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;seed&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;node prisma/seed.js&quot;</span>
+<span class="w">  </span><span class="p">},</span>
+<span class="w">  </span><span class="nt">&quot;scripts&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">&quot;dev&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;node src/index.js&quot;</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">&quot;seed&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;node prisma/seed.js&quot;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+
+<h3 id="_2">执行<a class="headerlink" href="#_2" title="Permanent link">#</a></h3>
+<div class="codehilite"><pre><span></span><code>npx<span class="w"> </span>prisma<span class="w"> </span>db<span class="w"> </span>seed
+</code></pre></div>
+
+<p>✅ 成功标志：</p>
+<div class="codehilite"><pre><span></span><code>Running seed command `node prisma/seed.js` ...
+Seeded: alice@prisma.io
+🌱  The seed command has been executed.
+</code></pre></div>
+
+<hr />
+<h2 id="11-prisma-studio">⑪ Prisma Studio 可视化<a class="headerlink" href="#11-prisma-studio" title="Permanent link">#</a></h2>
+<div class="codehilite"><pre><span></span><code>npx<span class="w"> </span>prisma<span class="w"> </span>studio
+</code></pre></div>
+
+<p>✅ 成功标志：浏览器自动打开 <code>http://localhost:5555</code>，左侧列出 <code>User</code>、<code>Post</code> 两张表，可点进去增删改查。</p>
+<p>⚠️ Studio 直接改库不经过迁移，开发调试用；不要在生产库上乱点。</p>
+<hr />
+<h2 id="12">⑫ 常见错误排查表<a class="headerlink" href="#12" title="Permanent link">#</a></h2>
+<table>
+<thead>
+<tr>
+<th>现象</th>
+<th>原因</th>
+<th>解决</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>Cannot find module './generated/client'</code></td>
+<td>v7 客户端不再放 <code>node_modules</code>，必须按 <code>output</code> 路径导入</td>
+<td>确认 <code>generator.output</code> 已设置；按生成目录的实际入口导入</td>
+</tr>
+<tr>
+<td><code>driver adapter is required</code></td>
+<td>v7 必须传 driver adapter</td>
+<td>装 <code>@prisma/adapter-pg</code> 并 <code>new PrismaClient({ adapter: new PrismaPg({connectionString}) })</code></td>
+</tr>
+<tr>
+<td><code>Environment variable not found: DATABASE_URL</code></td>
+<td>v7 不再自动加载 <code>.env</code></td>
+<td>代码顶部 <code>import 'dotenv/config'</code>；或在 <code>prisma.config.ts</code> 顶部加</td>
+</tr>
+<tr>
+<td>Client 类型与数据库不符（新增字段查不到、类型报错）</td>
+<td>改了 schema 没重新 generate</td>
+<td><code>npx prisma migrate dev</code> 后<strong>手动</strong> <code>npx prisma generate</code></td>
+</tr>
+<tr>
+<td><code>drift detected</code>，migrate dev 提示重置库</td>
+<td><code>db push</code> 与 <code>migrate</code> 混用，或手动改了库结构</td>
+<td>开发期：<code>prisma migrate reset</code>（会清数据）；选定 migrate 后不要再 db push</td>
+</tr>
+<tr>
+<td><code>P1010 Access denied</code> / SSL 报错</td>
+<td>v7 用 node-pg，自签证书校验更严</td>
+<td>adapter 传 <code>ssl: { rejectUnauthorized: false }</code> 或设 <code>NODE_EXTRA_CA_CERTS</code></td>
+</tr>
+<tr>
+<td>关系查询外键报错 <code>Foreign key constraint failed</code></td>
+<td>关联字段未正确成对（<code>authorId</code> 与 <code>author @relation</code>）</td>
+<td>检查 <code>@relation(fields:[authorId], references:[id])</code> 与外键字段是否都存在</td>
+</tr>
+<tr>
+<td>循环里查关联，慢得离谱</td>
+<td>N+1 查询</td>
+<td>改用 <code>include</code> 一次性预加载，或 <code>select</code> 精简字段</td>
+</tr>
+<tr>
+<td><code>$queryRawUnsafe</code> 被注入</td>
+<td>拼接了用户输入</td>
+<td>改用 tagged template <code>$queryRaw`... ${v} ...`</code></td>
+</tr>
+<tr>
+<td>CommonJS 项目跑 v7 客户端模块格式错</td>
+<td>v7 默认 ESM</td>
+<td><code>package.json</code> 加 <code>"type": "module"</code>；或保持 CJS 但调整 tsconfig</td>
+</tr>
+<tr>
+<td><code>enum</code> TS 值以为是数据库映射值</td>
+<td><code>@map</code> 只在 DB 层生效，TS 仍是 schema 名</td>
+<td>TS 里用 <code>Status.PENDING</code>（值 <code>'PENDING'</code>），不是映射后的字符串</td>
+</tr>
+<tr>
+<td><code>migrate dev</code> 在 CI 上要 shadow database 但权限不足</td>
+<td>受限权限账号无法建临时库</td>
+<td>在 <code>prisma.config.ts</code> 配 <code>shadowDatabaseUrl</code> 指向有权限的库</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_3">✅ 完成自检清单<a class="headerlink" href="#_3" title="Permanent link">#</a></h2>
+<ul>
+<li>[ ] <code>node -v</code> &gt;= 20.19.0；<code>docker ps</code> 能看到 pg 容器在跑</li>
+<li>[ ] <code>package.json</code> 已设 <code>"type": "module"</code>，装了 <code>prisma</code> / <code>@prisma/client</code> / <code>@prisma/adapter-pg</code> / <code>dotenv</code></li>
+<li>[ ] <code>prisma/schema.prisma</code> 含 <code>generator client { provider="prisma-client"; output="./generated/client" }</code></li>
+<li>[ ] <code>prisma.config.ts</code> 存在，顶部 <code>import 'dotenv/config'</code></li>
+<li>[ ] <code>User</code> 1—N <code>Post</code> 模型定义完整，含 <code>@@map</code> / <code>@map</code> / <code>@@index</code></li>
+<li>[ ] <code>npx prisma migrate dev --name init</code> 成功，<code>prisma/migrations/</code> 下有迁移文件</li>
+<li>[ ] <code>npx prisma generate</code> 成功，<code>prisma/generated/client/</code> 目录存在</li>
+<li>[ ] <code>new PrismaClient({ adapter: new PrismaPg(...) })</code> 能连库</li>
+<li>[ ] 5 个 CRUD 代码（create/findUnique/findMany/update/delete）都跑通且输出符合预期</li>
+<li>[ ] <code>include</code> 嵌套查询 + 嵌套写入都成功</li>
+<li>[ ] <code>$transaction</code> 数组与回调两种写法都验证过（含故意失败触发回滚）</li>
+<li>[ ] <code>prisma db seed</code> 能播种，<code>prisma studio</code> 能可视化查看数据</li>
+<li>[ ] 能说出"开发用 <code>migrate dev</code>、生产用 <code>migrate deploy</code>、原型用 <code>db push</code>，三者不要混用"</li>
+</ul>
+<hr />
+<h2 id="2026-06">🔗 参考文档（2026-06）<a class="headerlink" href="#2026-06" title="Permanent link">#</a></h2>
+<ul>
+<li>Prisma 7 升级指南：https://www.prisma.io/docs/guides/upgrade-prisma-orm/v7</li>
+<li>Schema 参考：https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference</li>
+<li>迁移工作流：https://www.prisma.io/docs/orm/prisma-migrate/workflows</li>
+<li>原始查询：https://www.prisma.io/docs/orm/prisma-client/using-raw-sql/raw-queries</li>
+</ul>
+<hr />
+<h2 id="_4">📝 关于本教程<a class="headerlink" href="#_4" title="Permanent link">#</a></h2>
+<ul>
+<li>与本仓库 <a href="../daily/week1/day02.md">Day 2：Postgres + Prisma + 数据建模</a> 的关系：本篇是 <strong>Prisma 本体的最小闭环</strong>（纯 Node 脚本，Prisma 7 写法）；Day 2 那篇是把 Prisma 包进 <strong>NestJS</strong>（<code>PrismaService</code> + 全局模块 + 注入），属于工程化集成，且那篇的 schema 仍按较传统写法，跑之前请先按本文开头的「版本与适用性」确认你本地的 Prisma 版本。</li>
+<li>本教程由一个三阶段 workflow 产出：① 调研（确认 Prisma 7 现状）✅ → ② 撰写 ✅ → ③ 校验 ⚠️（中断未完成），后由人工审查把关。v7 仍属较新版本，个别新 API（<code>prisma.config.ts</code> 的 <code>defineConfig</code>、生成客户端的入口文件名）在不同小版本可能略有差异，遇到不一致请以 <code>npx prisma -v</code> 对应版本的官方文档为准。</li>
+</ul>
+</body>
+</html>

@@ -182,6 +182,7 @@ agentdeveloper/               # 项目代码目录
 ## 🔗 快速导航
 
 - [开始 Day 1](./daily/week1/day01.md)
+- [Prisma ORM 快速入门](./quickstart/prisma-orm-quickstart.md)
 - [查看 1.5 年路径](./overview/roadmap.md)
 - [P1 项目说明](../agentdeveloper/p1-monitor/README.md)
 - [P1 产品需求](../agentdeveloper/p1-monitor/docs/PRD.md)
