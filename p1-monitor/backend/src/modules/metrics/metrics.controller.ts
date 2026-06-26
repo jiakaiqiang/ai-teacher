@@ -23,4 +23,10 @@ export class MetricsController {
     await this.metricsService.generateOnce();
     return { message: 'Metrics generated successfully' };
   }
+
+  @Get('clean')
+  async clean() {
+    const deleted = await this.metricsService.cleanRecentForTest();
+    return { deleted };
+  }
 }

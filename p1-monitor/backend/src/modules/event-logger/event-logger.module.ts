@@ -1,4 +1,7 @@
 import { Module } from '@nestjs/common';
+import { EventLoggerService } from './event-logger.service';
 
-@Module({})
+@Module({
+  providers: [EventLoggerService],
+})
 export class EventLoggerModule {}

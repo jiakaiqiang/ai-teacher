@@ -11,6 +11,7 @@ export class MetricsService {
     private prisma: PrismaService,
     private eventEmitter: EventEmitter2,
   ) {}
+  // 每隔 5 秒生成一次指标数据
 
   @Cron('*/5 * * * * *')
   async generateMetrics() {
@@ -32,7 +33,7 @@ export class MetricsService {
 
     this.logger.debug(`Generated ${servers.length * 4} metrics.`);
   }
-
+// 模拟生成指标数据
   private simulateMetrics(serverId: string) {
     const isAnomaly = Math.random() < 0.1;
 
@@ -66,6 +67,31 @@ export class MetricsService {
 
   async generateOnce() {
     await this.generateMetrics();
+  }
+
+  // 每天凌晨 3:00 清理 7 天前的旧指标数据
+  @Cron('0 0 3 * * *') 
+  async cleanOldMetrics() {
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const result = await this.prisma.metric.deleteMany({
+      where: {
+        timestamp: { lt: sevenDaysAgo },
+      },
+    });
+
+    this.logger.log(`🗑️ 清理了 ${result.count} 条旧指标数据`);
+    return result.count;
+  }
+
+  // 测试用：清理 1 分钟前的数据
+  async cleanRecentForTest() {
+    const oneMinuteAgo = new Date(Date.now() - 60 * 1000);
+    const result = await this.prisma.metric.deleteMany({
+      where: { timestamp: { lt: oneMinuteAgo } },
+    });
+    return result.count;
   }
 
   async getRecentMetrics(serverId: string, metricType: string, limit = 20) {

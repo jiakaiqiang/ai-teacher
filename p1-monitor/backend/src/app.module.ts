@@ -7,15 +7,19 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { HealthModule } from './modules/health/health.module';
 import { MetricsModule } from './modules/metrics/metrics.module';
-import { EventLoggerService } from './modules/event-logger/event-logger.service';
 import { EventLoggerModule } from './modules/event-logger/event-logger.module';
+
 @Module({
-  imports: [PrismaModule,ConfigModule.forRoot({ isGlobal: true }),
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(), // 启用定时任务
+    EventEmitterModule.forRoot(), // 启用事件
+    PrismaModule,
     HealthModule,
-    ScheduleModule.forRoot(), //启用定时任务
-    EventEmitterModule.forRoot(), MetricsModule, EventLoggerModule // 启动事件
+    MetricsModule,
+    EventLoggerModule,
   ],
   controllers: [AppController],
-  providers: [AppService, EventLoggerService],
+  providers: [AppService],
 })
 export class AppModule {}

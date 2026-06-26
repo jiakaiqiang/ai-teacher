@@ -422,11 +422,23 @@ async clean() {
 1. **如果我想停止某个 Cron 任务怎么办？**
    - 提示：SchedulerRegistry
 
+   我们定义一个cron 任务 给起一个定时任务的名称 
+   @Cron('0 0 3 * * *',{name:'myCron'})
+   在 想停止的函数中 使用 this.schedulerRegistry.getCronJob('myCron')  获取对应的定时任务
+   执行 job.stop()  则停止定时任务
+   停止的任务可以通过job.start() 的方式恢复任务 这种停止和恢复也都是临时的  任务还在内存中 
+   删除任务的时候 使用 this.schedulerRegistry.deleteCronJob('myCron')
+
 2. **EventEmitter 是同步还是异步？**
    - 如果监听器报错，会影响发射方吗？
+   是同步的   会影响发射放 
+   但是一般我们需要用try catch 进行异常的兜底
+
+   如果我们要使用异步的话 可以添加 async await 进行异步处理 然后再发送方 也进行async:true 的方式
 
 3. **为什么不直接在 MetricsService 里调用 DetectorService？**
    - 事件驱动的真正价值在哪？
+   模块结构 通过事件的方式可以广播给其他需要监听的模块使用   让系统围绕发生什么 而不是 我该调用谁。
 
 ## 💡 扩展思考
 
