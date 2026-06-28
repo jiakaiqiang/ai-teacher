@@ -1,0 +1,4 @@
+interface:
+  display_name: "File Operation Tools"
+  short_description: "Safe rules for read, write, append, and list file tools."
+  default_prompt: "Use $file-operation-tools to safely handle file reading, writing, appending, and directory listing tasks."
