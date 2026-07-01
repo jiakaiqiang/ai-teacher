@@ -106,4 +106,29 @@ export class MetricsService {
       id: metric.id.toString(),
     }));
   }
+
+    /**
+ * 手动生成异常数据（用于测试）
+ */
+async generateAnomalyData(serverId: string) {
+  const metrics = [
+    {
+      serverId,
+      metricType: 'cpu',
+      value: 98, // 明确超过阈值
+      unit: '%',
+    },
+    {
+      serverId,
+      metricType: 'temperature',
+      value: 36, // 温度异常
+      unit: '°C',
+    },
+  ];
+
+  await this.prisma.metric.createMany({ data: metrics });
+  this.eventEmitter.emit('metric.created', metrics);
+
+  return { message: '已生成异常数据' };
+}
 }

@@ -8,6 +8,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { HealthModule } from './modules/health/health.module';
 import { MetricsModule } from './modules/metrics/metrics.module';
 import { EventLoggerModule } from './modules/event-logger/event-logger.module';
+import { AnomalyDetectorModule } from './modules/anomaly-detector/anomaly-detector.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { EventLoggerModule } from './modules/event-logger/event-logger.module';
     HealthModule,
     MetricsModule,
     EventLoggerModule,
+    AnomalyDetectorModule,
   ],
   controllers: [AppController],
   providers: [AppService],
